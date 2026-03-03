@@ -17,7 +17,7 @@ while cap.isOpened():
     ret, frame = cap.read()
 
     if not ret:
-        print("Stream BROKEN, closing...")
+        print("Error: failed to read capture")
         break
 
     # Get results from model, conf(confidence) > 0.25??
@@ -51,6 +51,7 @@ while cap.isOpened():
     # Display the resulting frame
     cv2.imshow("Live Cameera Feed", frame)
 
+    # Press q to close the program
     if cv2.waitKey(1) == ord("q"):
         break
 
