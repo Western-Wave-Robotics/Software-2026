@@ -1,23 +1,24 @@
 import sys
+import time
+
+import cv2
 import pygame
 import serial
-import time
-import cv2
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import QTimer
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 # Initialize Pygame for joystick handling
 pygame.init()
 pygame.joystick.init()
 controller = pygame.joystick.Joystick(0)
-controller.init()
 
 # Set up serial communication (adjust port as needed)
-ser = serial.Serial('COM3', 9600)
+ser = serial.Serial("COM4", 9600)
 
 # Open the USB camera (adjust index if needed)
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
+
 
 def calculate_thrust(surge, sway, yaw):
     """Calculate the thrust for each motor based on input axes."""
@@ -27,6 +28,7 @@ def calculate_thrust(surge, sway, yaw):
     motorBR = surge + sway - yaw
     return motorFL, motorFR, motorBL, motorBR
 
+
 def clamp_motor_values(motorFL, motorFR, motorBL, motorBR):
     """Clamp thrust values between -1.0 and 1.0."""
     motorFL = max(-1.0, min(1.0, motorFL))
@@ -34,6 +36,7 @@ def clamp_motor_values(motorFL, motorFR, motorBL, motorBR):
     motorBL = max(-1.0, min(1.0, motorBL))
     motorBR = max(-1.0, min(1.0, motorBR))
     return motorFL, motorFR, motorBL, motorBR
+
 
 def scale(value, from_range, to_range, deadzone=0.0, neutral_range=(1475, 1575)):
     """Scale value from one range to another with an optional deadzone and neutral range."""
@@ -49,6 +52,7 @@ def scale(value, from_range, to_range, deadzone=0.0, neutral_range=(1475, 1575))
         return (neutral_range[0] + neutral_range[1]) / 2
 
     return scaled_value
+
 
 class ROV_GUI(QWidget):
     def __init__(self):
@@ -82,7 +86,7 @@ class ROV_GUI(QWidget):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         height, width = self.label.height(), self.label.width()  # Get QLabel size
         frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_LINEAR)  # Resize to fit window
-        qimg = QImage(frame.data, width, height, 3 * width, QImage.Format_RGB888)
+        qimg = QImage(frame.data, width, height, 3 * width, QImage.Format.Format_RGB888)
         self.label.setPixmap(QPixmap.fromImage(qimg))
 
     def read_controller(self):
@@ -90,12 +94,12 @@ class ROV_GUI(QWidget):
         pygame.event.pump()
 
         # Get joystick axes
-        left_stick_x = controller.get_axis(1)  # Left stick horizontal (yaw)
-        left_stick_y = controller.get_axis(0)  # Left stick vertical (surge)
-        right_stick_x = controller.get_axis(3)  # Right stick horizontal (sway)
+        left_stick_x = controller.get_axis(0)  # Left stick horizontal (yaw)
+        left_stick_y = controller.get_axis(1)  # Left stick vertical (surge)
+        right_stick_x = controller.get_axis(2)  # Right stick horizontal (sway)
 
         # Determine trigger axis for heave
-        trigger_axis = controller.get_axis(2)  # Adjust based on testing
+        trigger_axis = controller.get_axis(5)  # Adjust based on testing
         heave = scale(trigger_axis, (-1, 1), (-1.0, 1.0), deadzone=0.1)
 
         # Scale joystick inputs with dead zones
@@ -111,9 +115,19 @@ class ROV_GUI(QWidget):
 
         # Check for D-pad strafe input (left or right)
         if dpad_x == 1:  # D-pad Right → Only move right motors
-            motorFL, motorFR, motorBL, motorBR = surge, -1, sway, 1  # Front right goes backward, back right goes forward
+            motorFL, motorFR, motorBL, motorBR = (
+                surge,
+                -1,
+                sway,
+                1,
+            )  # Front right goes backward, back right goes forward
         elif dpad_x == -1:  # D-pad Left → Only move left motors
-            motorFL, motorFR, motorBL, motorBR = 1, surge, -1, sway  # Front left goes backward, back left goes forward
+            motorFL, motorFR, motorBL, motorBR = (
+                1,
+                surge,
+                -1,
+                sway,
+            )  # Front left goes backward, back left goes forward
         else:
             # Normal movement calculations for other axes
             motorFL, motorFR, motorBL, motorBR = calculate_thrust(surge, sway, yaw)
@@ -131,7 +145,10 @@ class ROV_GUI(QWidget):
 
         # Send motor commands to Arduino
         command = f"{int(motorFL_speed)} {int(motorFR_speed)} {int(motorBL_speed)} {int(motorBR_speed)} {int(motorUp1_speed)} {int(motorUp2_speed)}\n"
-        ser.write(command.encode('utf-8'))
+        ser.write(command.encode("utf-8"))
+        print(
+            f"FL:{int(motorFL_speed)} FR:{int(motorFR_speed)} BL:{int(motorBL_speed)} BR:{int(motorBR_speed)} UP1:{int(motorUp1_speed)} UP2:{int(motorUp2_speed)}"
+        )
 
     def closeEvent(self, event):
         """Release resources when the GUI is closed."""
@@ -139,9 +156,10 @@ class ROV_GUI(QWidget):
         pygame.quit()
         event.accept()
 
+
 # Run the GUI application
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ROV_GUI()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
