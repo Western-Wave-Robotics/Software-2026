@@ -4,9 +4,9 @@ import time
 import cv2
 import pygame
 import serial
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 # Initialize Pygame for joystick handling
 pygame.init()
@@ -86,7 +86,7 @@ class ROV_GUI(QWidget):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         height, width = self.label.height(), self.label.width()  # Get QLabel size
         frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_LINEAR)  # Resize to fit window
-        qimg = QImage(frame.data, width, height, 3 * width, QImage.Format_RGB888)
+        qimg = QImage(frame.data, width, height, 3 * width, QImage.Format.Format_RGB888)
         self.label.setPixmap(QPixmap.fromImage(qimg))
 
     def read_controller(self):
@@ -159,5 +159,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ROV_GUI()
     window.show()
-    sys.exit(app.exec_())
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
