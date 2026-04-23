@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import pygame
 import serial
-from PyQt6.QtCore import QObject, QSize, Qt, QThread, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget
 
@@ -205,8 +205,9 @@ class MainWindow(QMainWindow):
         self.controller_worker.error.connect(self.handle_controller_error)
 
         self.controller_thread.start()
+
         # Arduino setup
-        # self.ser = serial.Serial("COM4", 9600)
+        self.ser = serial.Serial("COM4", 9600)
 
     # QT Slot - Camera
     def update_frame(self, frame):
