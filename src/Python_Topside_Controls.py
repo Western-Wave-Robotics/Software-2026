@@ -138,8 +138,8 @@ class ControllerWorker(QObject):
 
     def calculate_thrust(self, surge, sway, yaw, heave):
         motorFL = max(-1.0, min(1.0, surge + sway + yaw))
-        motorFR = max(-1.0, min(1.0, surge - sway - yaw))
-        motorBL = max(-1.0, min(1.0, surge - sway + yaw))
+        motorFR = -max(-1.0, min(1.0, surge - sway - yaw))  # NEGATIVE bc CCW motors :(
+        motorBL = -max(-1.0, min(1.0, surge - sway + yaw))
         motorBR = max(-1.0, min(1.0, surge + sway - yaw))
         motorUPL = -heave
         motorUPR = heave
@@ -207,7 +207,7 @@ class MainWindow(QMainWindow):
         self.controller_thread.start()
 
         # Arduino setup
-        self.ser = serial.Serial("COM4", 9600)
+        # self.ser = serial.Serial("COM4", 9600)
 
     # QT Slot - Camera
     def update_frame(self, frame):
@@ -234,8 +234,8 @@ class MainWindow(QMainWindow):
         """Send scaled motor control data to arduino"""
         print(cntrl_data)
 
-        command = f"{int(cntrl_data["motorFL"])} {int(cntrl_data["motorFR"])} {int(cntrl_data["motorBL"])} {int(cntrl_data["motorBR"])} {int(cntrl_data["motorUPL"])} {int(cntrl_data["motorUPR"])}\n"
-        self.ser.write(command.encode("utf-8"))
+        # command = f"{int(cntrl_data["motorFL"])} {int(cntrl_data["motorFR"])} {int(cntrl_data["motorBL"])} {int(cntrl_data["motorBR"])} {int(cntrl_data["motorUPL"])} {int(cntrl_data["motorUPR"])}\n"
+        # self.ser.write(command.encode("utf-8"))
 
     def handle_camera_error(self, msg):
         self.video_label.setText(f"Camera Error:\n{msg}")
