@@ -5,12 +5,12 @@ import cv2
 import numpy as np
 import pygame
 import serial
-from PyQt6.QtCore import QObject, Qt, QThread, pyqtSignal
+from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtWidgets import (
-    QApplication,
     QLabel,
     QMainWindow,
+    QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -25,8 +25,9 @@ class MainWindow(QMainWindow):
 
         # GUI Setup
         self.setWindowTitle("ROV Control and Camera Feed")
-        self.resize(800, 600)
+        self.resize(1000, 800)
 
+        # TODO: Update to multiple column layout
         self.layout = QVBoxLayout()
 
         widget = QWidget()
@@ -50,8 +51,13 @@ class MainWindow(QMainWindow):
         self.camera_thread.start()
 
         # Controller Setup
+        # TODO: rename - controller status. update to text box?
         self.controller_label = QLabel("CONTROLLER CONNECTED")
         self.layout.addWidget(self.controller_label)
+
+        self.thruster_display = QPlainTextEdit()
+        self.thruster_display.setReadOnly(True)
+        self.layout.addWidget(self.thruster_display)
 
         self.controller_thread = QThread()
         self.controller_worker = ControllerWorker()
@@ -67,6 +73,9 @@ class MainWindow(QMainWindow):
         self.serial_btn = QPushButton("Connect to Arduino")
         self.serial_btn.clicked.connect(self.connect_serial)
         self.layout.addWidget(self.serial_btn)
+
+        self.debug = QPlainTextEdit()
+        self.layout.addWidget(self.debug)
 
     # QT Slot - Camera
     def update_frame(self, frame):
@@ -91,19 +100,26 @@ class MainWindow(QMainWindow):
     # QT Slot - Controller
     def read_controller(self, cntrl_data):
         """Send scaled motor control data to arduino"""
-        print(cntrl_data)
+        self.update_thruster_display(cntrl_data)
         if self.ser:
             command = f"{int(cntrl_data['motorFL'])} {int(cntrl_data['motorFR'])} {int(cntrl_data['motorBL'])} {int(cntrl_data['motorBR'])} {int(cntrl_data['motorUPL'])} {int(cntrl_data['motorUPR'])}\n"
             self.ser.write(command.encode("utf-8"))
+
+    def update_thruster_display(self, cntrl_data):
+        """Update the GUI display with the latest controller motor values."""
+        lines = [f"{key}: {value}" for key, value in cntrl_data.items()]
+        self.thruster_display.setPlainText("\n".join(lines))
 
     def connect_serial(self):
         """Attempt to connect to the Arduino via serial port."""
         try:
             self.ser = serial.Serial("COM4", 9600)
-            self.serial_btn.setText("Arduino Connected")
+            self.debug.appendPlainText("Arduino Connected")
+            self.serial_btn.setText("Connected")
             self.serial_btn.setEnabled(False)
         except Exception as e:
-            self.serial_btn.setText(f"Serial Error:\n{str(e)}")
+            self.debug.appendPlainText(f"Serial Error:\n{str(e)}")
+            self.serial_btn.setText("Connection Failed")
             self.serial_btn.setEnabled(False)
 
     def handle_camera_error(self, msg):
