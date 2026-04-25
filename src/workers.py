@@ -5,6 +5,8 @@ import numpy as np
 import pygame
 from PyQt6.QtCore import QObject, pyqtSignal
 
+from src.controller_math import apply_deadzone, calculate_thrust, scale
+
 
 class CameraWorker(QObject):
     # Signals
@@ -14,7 +16,7 @@ class CameraWorker(QObject):
     def __init__(self, fps=30):
         super().__init__()
         self.fps = fps
-        self.read_cam = True
+        self.running = True
 
     def run(self):
         frame_time = 1.0 / self.fps
@@ -24,7 +26,7 @@ class CameraWorker(QObject):
             if not cap.isOpened():
                 raise Exception("Camera not found")
 
-            while self.read_cam:
+            while self.running:
                 start_time = time.time()
 
                 ret, frame = cap.read()
@@ -49,7 +51,7 @@ class CameraWorker(QObject):
                 cap.release()
 
     def stop(self):
-        self.read_cam = False
+        self.running = False
 
 
 class ControllerWorker(QObject):
@@ -61,7 +63,7 @@ class ControllerWorker(QObject):
         super().__init__()
         self.rate = poll_rate
         self.cntrl_data = {}
-        self.read_controller = True
+        self.running = True
 
     def run(self):
         pygame.init()
@@ -75,7 +77,7 @@ class ControllerWorker(QObject):
 
             controller = pygame.joystick.Joystick(0)
 
-            while self.read_controller:
+            while self.running:
                 start_time = time.time()
                 pygame.event.pump()
 
@@ -86,11 +88,11 @@ class ControllerWorker(QObject):
                 right_stick_y = controller.get_axis(3)
 
                 # Triggers
-                left_trigger = controller.get_axis(4)
-                right_trigger = controller.get_axis(5)
+                # left_trigger = controller.get_axis(4)
+                # right_trigger = controller.get_axis(5)
 
                 # D-pad
-                dpad_x, dpad_y = controller.get_hat(0)
+                # dpad_x, dpad_y = controller.get_hat(0)
                 # Buttons
                 # button_A = controller.get_button(0)
                 # B = controller.get_button(1)
@@ -101,23 +103,23 @@ class ControllerWorker(QObject):
                 # LB = controller.get_button(4)
                 # RB = controller.get_button(5)
 
-                surge = self.apply_deadzone(-left_stick_y)
-                yaw = self.apply_deadzone(left_stick_x)
-                sway = self.apply_deadzone(right_stick_x)
-                heave = self.apply_deadzone(-right_stick_y)
+                surge = apply_deadzone(-left_stick_y)
+                yaw = apply_deadzone(left_stick_x)
+                sway = apply_deadzone(right_stick_x)
+                heave = apply_deadzone(-right_stick_y)
 
-                motorFL, motorFR, motorBL, motorBR, motorUPL, motorUPR = self.calculate_thrust(
+                motorFL, motorFR, motorBL, motorBR, motorUPL, motorUPR = calculate_thrust(
                     surge, sway, yaw, heave
                 )
 
-                self.cntrl_data["motorFL"] = self.scale(motorFL)
-                self.cntrl_data["motorFR"] = self.scale(motorFR)
-                self.cntrl_data["motorBL"] = self.scale(motorBL)
-                self.cntrl_data["motorBR"] = self.scale(motorBR)
-                self.cntrl_data["motorUPL"] = self.scale(motorUPL)
-                self.cntrl_data["motorUPR"] = self.scale(motorUPR)
+                self.cntrl_data["motorFL"] = scale(motorFL)
+                self.cntrl_data["motorFR"] = scale(motorFR)
+                self.cntrl_data["motorBL"] = scale(motorBL)
+                self.cntrl_data["motorBR"] = scale(motorBR)
+                self.cntrl_data["motorUPL"] = scale(motorUPL)
+                self.cntrl_data["motorUPR"] = scale(motorUPR)
 
-                self.controller_ready.emit(self.cntrl_data.copy())
+                self.controller_ready.emit(self.cntrl_data.copy())  # Send data to main thread
 
                 # limit polling rate (similar to fps)
                 elapsed = time.time() - start_time  # Elapsed time to load single frame
@@ -126,36 +128,6 @@ class ControllerWorker(QObject):
         except Exception as e:
             self.error.emit(str(e))
 
-    def apply_deadzone(self, value, deadzone=0.0):
-        if abs(value) < deadzone:
-            return 0.0  # Neutral value within the target range
-        else:
-            return value
-
-    def calculate_thrust(self, surge, sway, yaw, heave):
-        """Calculate individual motor thrusts based on controller inputs."""
-
-        motorFL = max(-1.0, min(1.0, surge + sway + yaw))
-        motorFR = -max(-1.0, min(1.0, surge - sway - yaw))  # NEGATIVE bc CCW motors :(
-        motorBL = -max(-1.0, min(1.0, surge - sway + yaw))
-        motorBR = max(-1.0, min(1.0, surge + sway - yaw))
-        motorUPL = -heave
-        motorUPR = heave
-
-        return motorFL, motorFR, motorBL, motorBR, motorUPL, motorUPR
-
-    def scale(self, value, from_range=(-1.0, 1.0), to_range=(1000, 2000), neutral_range=(1450, 1550)):
-        """Scale controller input to motor output range, with a neutral deadzone."""
-
-        from_min, from_max = from_range
-        to_min, to_max = to_range
-        scaled_value = ((value - from_min) / (from_max - from_min)) * (to_max - to_min) + to_min
-
-        # Apply neutral range deadzone between 1475 and 1575
-        if neutral_range[0] <= scaled_value <= neutral_range[1]:
-            return sum(neutral_range) / 2
-
-        return round(scaled_value, 1)
-
     def stop(self):
-        self.read_controller = False
+        self.running = False
+        self.running = False

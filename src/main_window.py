@@ -16,6 +16,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from src.workers import CameraWorker, ControllerWorker
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -90,9 +92,19 @@ class MainWindow(QMainWindow):
     def read_controller(self, cntrl_data):
         """Send scaled motor control data to arduino"""
         print(cntrl_data)
+        if self.ser:
+            command = f"{int(cntrl_data['motorFL'])} {int(cntrl_data['motorFR'])} {int(cntrl_data['motorBL'])} {int(cntrl_data['motorBR'])} {int(cntrl_data['motorUPL'])} {int(cntrl_data['motorUPR'])}\n"
+            self.ser.write(command.encode("utf-8"))
 
-        command = f"{int(cntrl_data["motorFL"])} {int(cntrl_data["motorFR"])} {int(cntrl_data["motorBL"])} {int(cntrl_data["motorBR"])} {int(cntrl_data["motorUPL"])} {int(cntrl_data["motorUPR"])}\n"
-        self.ser.write(command.encode("utf-8"))
+    def connect_serial(self):
+        """Attempt to connect to the Arduino via serial port."""
+        try:
+            self.ser = serial.Serial("COM4", 9600)
+            self.serial_btn.setText("Arduino Connected")
+            self.serial_btn.setEnabled(False)
+        except Exception as e:
+            self.serial_btn.setText(f"Serial Error:\n{str(e)}")
+            self.serial_btn.setEnabled(False)
 
     def handle_camera_error(self, msg):
         self.video_label.setText(f"Camera Error:\n{msg}")
@@ -117,11 +129,3 @@ class MainWindow(QMainWindow):
             self.ser.close()
         pygame.quit()
         event.accept()
-
-
-# Run the GUI application
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
