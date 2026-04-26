@@ -1,3 +1,5 @@
+# main_window.py - Main GUI for ROV control and live camera feed display.
+
 import cv2
 import pygame
 import serial

@@ -1,4 +1,6 @@
 # From https://www.pygame.org/docs/ref/joystick.html
+# Used as a reference for controller input mapping and hotplugging.
+# This file is not used in the final program, but may be useful for testing and reference.
 
 import pygame
 

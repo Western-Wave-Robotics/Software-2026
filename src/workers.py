@@ -1,3 +1,5 @@
+# workers.py - Background worker threads for camera and controller input.
+
 import time
 
 import cv2
