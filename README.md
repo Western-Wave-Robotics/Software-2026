@@ -4,6 +4,7 @@
   <summary>Table of Contents</summary>
   <ul>
     <li><a href="#development-setup">Development Setup</a></li>
+    <li><a href="#hardware-structure">Hardware Structure</a></li>
     <li><a href="#software-structure">Software Structure</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -36,6 +37,8 @@ python -m venv .venv
 ```ps
 python -m pip install -e ".[dev]"
 ```
+## Hardware Structure
+Work in progress...
 
 ## Software Structure
 ```
@@ -55,4 +58,4 @@ run.py                      <- Topside controls entry point
 - [ ] **Task 2.1:** Implement image recognition using Ultralytics YOLO26.
 
 ## Acknowledgments
-- PythonGUIs - amazing free PyQt6 introduction (as well as many others)
+- [PythonGUIs](https://www.pythonguis.com/) - amazing free PyQt6 introduction (as well as many others)
