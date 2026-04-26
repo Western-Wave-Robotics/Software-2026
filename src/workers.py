@@ -132,4 +132,3 @@ class ControllerWorker(QObject):
 
     def stop(self):
         self.running = False
-        self.running = False
