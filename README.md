@@ -42,14 +42,17 @@ Work in progress...
 
 ## Software Structure
 ```
-/models                       <- ML models (img rec)
-/src                
-  /ardunio_control            <- Onboard arduino control
-  /utils                      <- Shared utilites
-  controller_math.py          <- Thrust calculation + scaling
-  main_window.py              <- Main GUI Thread
-  workers.py                  <- Worker Threads
-run.py                      <- Topside controls entry point
+Software-2026/                <- Project root
+|
+├── models/                   <- ML models (img rec)
+├── src/              
+|   ├── ardunio_control/      <- Onboard arduino control
+|   ├── utils/                
+|   ├── controller_math.py    <- Thrust calculation + scaling
+|   ├── main_window.py        <- Main GUI thread
+|   └── workers.py            <- Background worker threads
+|
+└── run.py                    <- Project entry point                    
 ```
 
 ## Roadmap
