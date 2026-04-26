@@ -1,8 +1,4 @@
-import sys
-import time
-
 import cv2
-import numpy as np
 import pygame
 import serial
 from PyQt6.QtCore import Qt, QThread
