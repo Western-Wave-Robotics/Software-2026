@@ -68,12 +68,14 @@ class MainWindow(QMainWindow):
         self.serial_btn.clicked.connect(self.connect_serial)
         self.layout.addWidget(self.serial_btn)
 
+        # Debug output
         self.debug = QPlainTextEdit()
         self.layout.addWidget(self.debug)
 
     # QT Slot - Camera
     def update_frame(self, frame):
         """Display live video feed from the camera."""
+
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_frame.shape
         bytes_per_line = ch * w
@@ -109,6 +111,7 @@ class MainWindow(QMainWindow):
 
     def update_controller_status(self, status):
         """Update the controller status label."""
+
         self.debug.appendPlainText(status)
         if "Disconnected" in status:
             self.thruster_display.clear()
@@ -121,6 +124,7 @@ class MainWindow(QMainWindow):
             self.debug.appendPlainText("Arduino Connected")
             self.serial_btn.setText("Connected")
             self.serial_btn.setEnabled(False)
+
         except Exception as e:
             self.debug.appendPlainText(f"Serial Error:\n{str(e)}")
             self.serial_btn.setText("Connect to Arduino")
@@ -128,6 +132,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Release resources when the GUI is closed."""
+
         # Close camera thread
         self.camera_worker.stop()
         self.camera_thread.quit()
