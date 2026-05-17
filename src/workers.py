@@ -24,7 +24,7 @@ class CameraWorker(QObject):
         frame_time = 1.0 / self.fps
 
         try:
-            cap = cv2.VideoCapture(0)
+            cap = cv2.VideoCapture(1)
 
             if not cap.isOpened():
                 raise Exception("Camera not found")
