@@ -64,8 +64,8 @@ class ControllerWorker(QObject):
 
     def __init__(self, poll_rate=30, ramp_rate=1000):
         super().__init__()
-        self.poll_rate = poll_rate
-        self.ramp_rate = ramp_rate
+        self.poll_rate = poll_rate  # 30 polls per second
+        self.ramp_rate = ramp_rate  # units/second
         self.controllers = {}
         self.cntrl_data = {}
         self.running = True
