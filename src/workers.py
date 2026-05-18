@@ -128,7 +128,9 @@ class ControllerWorker(QObject):
             # RB = controller.get_button(5)
 
             surge = apply_deadzone(-left_stick_y, deadzone=0.1)
-            yaw = apply_deadzone(left_stick_x, deadzone=0.1)
+            yaw = (
+                apply_deadzone(left_stick_x, deadzone=0.1) / 2 if abs(left_stick_x) > 0.1 else 0
+            )  # Reduced yaw power by half
             sway = apply_deadzone(right_stick_x, deadzone=0.1)
             heave = apply_deadzone(-right_stick_y, deadzone=0.1)
 
