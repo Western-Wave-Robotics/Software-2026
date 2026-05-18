@@ -7,7 +7,7 @@ import numpy as np
 import pygame
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from src.controller_math import apply_deadzone, calculate_thrust, scale
+from src.controller_math import apply_deadzone, calculate_thrust, ramp_value, scale
 
 
 class CameraWorker(QObject):
@@ -62,18 +62,27 @@ class ControllerWorker(QObject):
     status = pyqtSignal(str)
     controller_ready = pyqtSignal(dict)
 
-    def __init__(self, poll_rate=30):
+    def __init__(self, poll_rate=30, ramp_rate=1000):
         super().__init__()
-        self.rate = poll_rate
+        self.poll_rate = poll_rate
+        self.ramp_rate = ramp_rate
         self.controllers = {}
         self.cntrl_data = {}
         self.running = True
+        self.prev_motor_values = {
+            "motorFL": 1500,
+            "motorFR": 1500,
+            "motorBL": 1500,
+            "motorBR": 1500,
+            "motorUPL": 1500,
+            "motorUPR": 1500,
+        }
 
     def run(self):
         pygame.init()
         pygame.joystick.init()
 
-        interval = 1 / self.rate  # Time between polls in seconds
+        interval = 1 / self.poll_rate  # Time between polls in seconds
 
         while self.running:
             start_time = time.time()
@@ -127,12 +136,24 @@ class ControllerWorker(QObject):
                 surge, sway, yaw, heave
             )
 
-            self.cntrl_data["motorFL"] = scale(motorFL)
-            self.cntrl_data["motorFR"] = scale(motorFR)
-            self.cntrl_data["motorBL"] = scale(motorBL)
-            self.cntrl_data["motorBR"] = scale(motorBR)
-            self.cntrl_data["motorUPL"] = scale(motorUPL)
-            self.cntrl_data["motorUPR"] = scale(motorUPR)
+            target_values = {
+                "motorFL": scale(motorFL),
+                "motorFR": scale(motorFR),
+                "motorBL": scale(motorBL),
+                "motorBR": scale(motorBR),
+                "motorUPL": scale(motorUPL),
+                "motorUPR": scale(motorUPR),
+            }
+
+            # Ramp motor values
+            max_step = self.ramp_rate * interval
+            for name, target_value in target_values.items():
+                self.cntrl_data[name] = ramp_value(
+                    self.prev_motor_values.get(name, 1500),
+                    target_value,
+                    max_step,
+                )
+                self.prev_motor_values[name] = self.cntrl_data[name]
 
             self.controller_ready.emit(self.cntrl_data.copy())  # Send data to main thread
 
