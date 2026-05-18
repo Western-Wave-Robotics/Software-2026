@@ -13,13 +13,26 @@ def calculate_thrust(surge, sway, yaw, heave):
     """Calculate individual motor thrusts based on controller inputs."""
 
     motorFL = max(-1.0, min(1.0, surge + sway + yaw))
-    motorFR = -max(-1.0, min(1.0, surge - sway - yaw))  # NEGATIVE bc CCW motors :(
-    motorBL = -max(-1.0, min(1.0, surge - sway + yaw))  # NEGATIVE bc CCW motors :(
+    motorFR = -max(-1.0, min(1.0, surge - sway - yaw))
+    motorBL = -max(-1.0, min(1.0, surge - sway + yaw))
     motorBR = max(-1.0, min(1.0, surge + sway - yaw))
-    motorUPL = -heave  # NEGATIVE bc CCW motors :(
+    motorUPL = -heave
     motorUPR = heave
 
     return motorFL, motorFR, motorBL, motorBR, motorUPL, motorUPR
+
+
+def ramp_value(current, target, max_delta):
+    """Gradually ramp motor values to prevent esc's from dying :("""
+    if current == target:
+        return int(current)
+
+    delta = target - current
+    if abs(delta) <= max_delta:
+        return int(target)
+
+    next_value = current + max_delta * (1 if delta > 0 else -1)
+    return int(round(next_value))
 
 
 def scale(value, input_range=(-1.0, 1.0), esc_range=(1000, 2000), neutral_range=(1475, 1525)):
