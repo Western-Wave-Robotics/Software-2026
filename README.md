@@ -14,6 +14,7 @@
 ## MATE ROV 2026 - Control Software
 
 This repository contains the full software stack for our MATE ROV 2026 competition ROV. It includes:
+- Topside GUI and controller input software
 - Serial communication between topside and ROV
 - Motor control with ardunio
 - **W.I.P:** Image recognition with [Ultralytics YOLO26](https://docs.ultralytics.com/models/yolo26/)
@@ -56,8 +57,9 @@ Software-2026/                <- Project root
 ```
 
 ## Roadmap
-- [x] **ROV Control:** Controller math, thruster esc scaling, controller value outputs, etc.
+- [x] **ROV Control:** Controller math, thruster esc scaling, controller value outputs, thruster ramping.
 - [ ] **UI Polish:** Refine UI, live video feed display, debug console.
+- [ ] **Task 1.2:** Coral garden ridge modelling via photogrammetry.
 - [ ] **Task 2.1:** Implement image recognition using Ultralytics YOLO26.
 
 ## Acknowledgments
