@@ -4,7 +4,6 @@
   <summary>Table of Contents</summary>
   <ul>
     <li><a href="#development-setup">Development Setup</a></li>
-    <li><a href="#hardware-structure">Hardware Structure</a></li>
     <li><a href="#software-structure">Software Structure</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -18,7 +17,6 @@ This repository contains the full software stack for our MATE ROV 2026 competiti
 - Serial communication between topside and ROV
 - Motor control with ardunio
 - **W.I.P:** Image recognition with [Ultralytics YOLO26](https://docs.ultralytics.com/models/yolo26/)
-- TO BE CONTINUED...
 
 ## Development Setup
 Reccomended installation and setup for development.
@@ -38,8 +36,6 @@ python -m venv .venv
 ```ps
 python -m pip install -e ".[dev]"
 ```
-## Hardware Structure
-Work in progress...
 
 ## Software Structure
 ```
@@ -48,7 +44,7 @@ Software-2026/                <- Project root
 ├── models/                   <- ML models (img rec)
 ├── src/              
 |   ├── ardunio_control/      <- Onboard arduino control
-|   ├── utils/                
+|   ├── utils/                <- Extra useful utils
 |   ├── controller_math.py    <- Thrust calculation + scaling
 |   ├── main_window.py        <- Main GUI thread
 |   └── workers.py            <- Background worker threads
@@ -58,9 +54,8 @@ Software-2026/                <- Project root
 
 ## Roadmap
 - [x] **ROV Control:** Controller math, thruster esc scaling, controller value outputs, thruster ramping.
-- [ ] **UI Polish:** Refine UI, live video feed display, debug console.
-- [ ] **Task 1.2:** Coral garden ridge modelling via photogrammetry.
-- [ ] **Task 2.1:** Implement image recognition using Ultralytics YOLO26.
+- [x] **UI Polish:** Refine UI, live video feed display, debug console.
+- [ ] **Config Update** Implement more configurable settings within the GUI (Controller mapping, thruster ramping, etc).
 
 ## Acknowledgments
 - [PythonGUIs](https://www.pythonguis.com/) - Amazing free PyQt6 introduction (as well as many others)
