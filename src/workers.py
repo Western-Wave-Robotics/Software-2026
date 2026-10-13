@@ -8,6 +8,7 @@ import pygame
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from src.controller_math import apply_deadzone, calculate_thrust, ramp_value, scale
+from src.exceptions import NoCameraFoundError
 
 
 class CameraWorker(QObject):
@@ -19,15 +20,16 @@ class CameraWorker(QObject):
         super().__init__()
         self.fps = fps
         self.running = True
+        self.camera_index = 1
 
     def run(self):
         frame_time = 1.0 / self.fps
 
         try:
-            cap = cv2.VideoCapture(1)
+            cap = cv2.VideoCapture(self.camera_index)
 
             if not cap.isOpened():
-                raise Exception("Camera not found")
+                raise NoCameraFoundError(self.camera_index)
 
             while self.running:
                 start_time = time.time()
@@ -42,11 +44,13 @@ class CameraWorker(QObject):
 
                 # Limit fps
                 elapsed = time.time() - start_time  # Elapsed time to load single frame
-                time.sleep(max(0, frame_time - elapsed))  # Subtract elapsed time for stable fps
+                time.sleep(
+                    max(0, frame_time - elapsed)
+                )  # Subtract elapsed time for stable fps
 
             cap.release()
 
-        except Exception as e:
+        except NoCameraFoundError as e:
             self.error.emit(str(e))
 
         finally:
@@ -92,7 +96,9 @@ class ControllerWorker(QObject):
                 if event.type == pygame.JOYDEVICEADDED:
                     controller = pygame.joystick.Joystick(event.device_index)
                     self.controllers[controller.get_instance_id()] = controller
-                    self.status.emit(f"Controller {controller.get_instance_id()} Connected")
+                    self.status.emit(
+                        f"Controller {controller.get_instance_id()} Connected"
+                    )
 
                 elif event.type == pygame.JOYDEVICEREMOVED:
                     del self.controllers[event.instance_id]
@@ -103,7 +109,7 @@ class ControllerWorker(QObject):
                 continue
 
             # Use the first connected controller
-            controller = list(self.controllers.values())[0]
+            controller = next(iter(self.controllers.values()))
 
             # Joysticks
             left_stick_x = controller.get_axis(0)
@@ -129,7 +135,9 @@ class ControllerWorker(QObject):
 
             surge = apply_deadzone(-left_stick_y, deadzone=0.1)
             yaw = (
-                apply_deadzone(left_stick_x, deadzone=0.1) / 2 if abs(left_stick_x) > 0.1 else 0
+                apply_deadzone(left_stick_x, deadzone=0.1) / 2
+                if abs(left_stick_x) > 0.1
+                else 0
             )  # Reduced yaw power by half
             sway = apply_deadzone(right_stick_x, deadzone=0.1)
             heave = apply_deadzone(-right_stick_y, deadzone=0.1)
@@ -157,7 +165,9 @@ class ControllerWorker(QObject):
                 )
                 self.prev_motor_values[name] = self.cntrl_data[name]
 
-            self.controller_ready.emit(self.cntrl_data.copy())  # Send data to main thread
+            self.controller_ready.emit(
+                self.cntrl_data.copy()
+            )  # Send data to main thread
 
             # limit polling rate (similar to fps)
             elapsed = time.time() - start_time  # Elapsed time to load single frame
