@@ -26,16 +26,16 @@ class MainWindow(QMainWindow):
         self.resize(1000, 800)
 
         # TODO: Update to multiple column layout
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         widget = QWidget()
-        widget.setLayout(self.layout)
+        widget.setLayout(layout)
         self.setCentralWidget(widget)
 
         # Camera Setup
         self.video_label = QLabel("VIDEO STREAM")
         self.video_label.setMinimumSize(640, 480)
-        self.layout.addWidget(self.video_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.video_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.camera_thread = QThread()
         self.camera_worker = CameraWorker(fps=30)
@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
         # Controller Setup
         self.thruster_display = QPlainTextEdit()
         self.thruster_display.setReadOnly(True)
-        self.layout.addWidget(self.thruster_display)
+        layout.addWidget(self.thruster_display)
 
         self.controller_thread = QThread()
         self.controller_worker = ControllerWorker()
@@ -66,11 +66,11 @@ class MainWindow(QMainWindow):
         self.ser = None
         self.serial_btn = QPushButton("Connect to Arduino")
         self.serial_btn.clicked.connect(self.connect_serial)
-        self.layout.addWidget(self.serial_btn)
+        layout.addWidget(self.serial_btn)
 
         # Debug output
         self.debug = QPlainTextEdit()
-        self.layout.addWidget(self.debug)
+        layout.addWidget(self.debug)
 
     # QT Slot - Camera
     def update_frame(self, frame):
@@ -80,7 +80,9 @@ class MainWindow(QMainWindow):
         h, w, ch = rgb_frame.shape
         bytes_per_line = ch * w
 
-        qt_image = QImage(rgb_frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+        qt_image = QImage(
+            rgb_frame.data, w, h, bytes_per_line, QImage.Format.Format_RGB888
+        )
 
         pixmap = QPixmap.fromImage(qt_image)
 
@@ -126,7 +128,7 @@ class MainWindow(QMainWindow):
             self.serial_btn.setEnabled(False)
 
         except Exception as e:
-            self.debug.appendPlainText(f"Serial Error:\n{str(e)}")
+            self.debug.appendPlainText(f"Serial Error:\n{e!s}")
             self.serial_btn.setText("Connect to Arduino")
             self.serial_btn.setEnabled(True)
 
